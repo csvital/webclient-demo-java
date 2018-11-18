@@ -30,7 +30,7 @@ public class WebclientDemoApplicationTests {
 	}
 
 	@Test
-	public void showUsers() throws Exception {
+	public void retrieveUsers() throws Exception {
 		CountDownLatch latch = new CountDownLatch(1);
 		Flux<User> users = webClient()
 				.get()
@@ -66,7 +66,7 @@ public class WebclientDemoApplicationTests {
 	}
 
 	@Test
-	public void retrieveAllUsersOrders() throws Exception {
+	public void retrieveAllUsersIds() throws Exception {
 		CountDownLatch latch = new CountDownLatch(1);
 		Flux<String> users = webClient()
 				.get()
@@ -74,16 +74,7 @@ public class WebclientDemoApplicationTests {
 				.retrieve()
 				.bodyToFlux(String.class);
 
-		users = users.mergeWith(Mono.justOrEmpty(User.BANNED_USER.getUsername()));
 
-		Flux<Pair<User, Order>> orders = users.flatMap(user -> webClient()
-				.get()
-				.uri("/orders/{username}", user.getUsername())
-				.retrieve()
-				.bodyToFlux(Order.class)
-				.defaultIfEmpty(Order.NOT_FOUND)
-				.map(order -> new Pair<>(user, order))
-		);
 		orders.subscribe(user -> log.info("Received {}", user),
 				(ex) -> log.error("Received exception", ex), latch::countDown);
 		latch.await();
